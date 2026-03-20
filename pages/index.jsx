@@ -102,7 +102,7 @@ export default function Home() {
   // CRUD Operations
   const saveItem = async () => {
     if (!form.item?.trim() || !form.action?.trim() || !form.dueDate) {
-      alert('Please fill all required fields');
+      alert('Please fill all required fields (Item, Action, Due Date)');
       return;
     }
 
@@ -119,20 +119,24 @@ export default function Home() {
       };
 
       if (editing.item) {
-        await sb.from('cx_standup_items').update(data).eq('id', editing.item.id);
+        const { error } = await sb.from('cx_standup_items').update(data).eq('id', editing.item.id);
+        if (error) throw error;
       } else {
-        await sb.from('cx_standup_items').insert({
+        const { error } = await sb.from('cx_standup_items').insert({
           ...data,
           id: Date.now().toString(),
           sortOrder: items.length,
           createdAt: new Date().toISOString(),
         });
+        if (error) throw error;
       }
 
       closeModal('item');
-      loadData();
+      await loadData();
+      alert('✅ Item saved successfully!');
     } catch (err) {
-      alert('Error saving item');
+      console.error('Save error:', err);
+      alert('❌ Error: ' + (err.message || 'Failed to save item'));
     }
   };
 
@@ -164,19 +168,23 @@ export default function Home() {
       };
 
       if (editing.project) {
-        await sb.from('cx_projects').update(data).eq('id', editing.project.id);
+        const { error } = await sb.from('cx_projects').update(data).eq('id', editing.project.id);
+        if (error) throw error;
       } else {
-        await sb.from('cx_projects').insert({
+        const { error } = await sb.from('cx_projects').insert({
           ...data,
           id: Date.now().toString(),
           sortOrder: projects.length,
         });
+        if (error) throw error;
       }
 
       closeModal('project');
-      loadData();
+      await loadData();
+      alert('✅ Project saved successfully!');
     } catch (err) {
-      alert('Error saving project');
+      console.error('Save error:', err);
+      alert('❌ Error: ' + (err.message || 'Failed to save project'));
     }
   };
 
@@ -210,19 +218,23 @@ export default function Home() {
       };
 
       if (editing.risk) {
-        await sb.from('cx_risk_register').update(data).eq('id', editing.risk.id);
+        const { error } = await sb.from('cx_risk_register').update(data).eq('id', editing.risk.id);
+        if (error) throw error;
       } else {
-        await sb.from('cx_risk_register').insert({
+        const { error } = await sb.from('cx_risk_register').insert({
           ...data,
           id: Date.now().toString(),
           sortOrder: risks.length,
         });
+        if (error) throw error;
       }
 
       closeModal('risk');
-      loadData();
+      await loadData();
+      alert('✅ Risk saved successfully!');
     } catch (err) {
-      alert('Error saving risk');
+      console.error('Save error:', err);
+      alert('❌ Error: ' + (err.message || 'Failed to save risk'));
     }
   };
 
