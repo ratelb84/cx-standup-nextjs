@@ -3,9 +3,15 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// Use anon key for reads, service role for writes (bypasses RLS)
 const sb = createClient(
   'https://hqfszlxdkvwlvpwqqmbd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZnN6bHhka3Z3bHZwd3FxbWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTExODgsImV4cCI6MjA4ODEyNzE4OH0.4OlPny5uJFTslf6iWfF7fAaVl0x2I_VG63QPa1Amq8Q'
+);
+
+const sbAdmin = createClient(
+  'https://hqfszlxdkvwlvpwqqmbd.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZnN6bHhka3Z3bHZwd3FxbWJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjU1MTE4OCwiZXhwIjoyMDg4MTI3MTg4fQ.EAOsrTO51SrDiyRz5DHp0uGYSpUSans-uNlqZcABPyk'
 );
 
 const OWNERS = ['Don', 'Mark', 'Kerushan', 'Daryl', 'Tunya', 'Tim', 'John', 'Greg', 'Verona', 'Rich'];
@@ -119,10 +125,10 @@ export default function Home() {
       };
 
       if (editing.item) {
-        const { error } = await sb.from('cx_standup_items').update(data).eq('id', editing.item.id);
+        const { error } = await sbAdmin.from('cx_standup_items').update(data).eq('id', editing.item.id);
         if (error) throw error;
       } else {
-        const { error } = await sb.from('cx_standup_items').insert({
+        const { error } = await sbAdmin.from('cx_standup_items').insert({
           ...data,
           id: Date.now().toString(),
           sortOrder: items.length,
@@ -143,7 +149,7 @@ export default function Home() {
   const deleteItem = async (id) => {
     if (!confirm('Delete?')) return;
     try {
-      await sb.from('cx_standup_items').delete().eq('id', id);
+      await sbAdmin.from('cx_standup_items').delete().eq('id', id);
       loadData();
     } catch (err) {
       alert('Error deleting');
@@ -168,10 +174,10 @@ export default function Home() {
       };
 
       if (editing.project) {
-        const { error } = await sb.from('cx_projects').update(data).eq('id', editing.project.id);
+        const { error } = await sbAdmin.from('cx_projects').update(data).eq('id', editing.project.id);
         if (error) throw error;
       } else {
-        const { error } = await sb.from('cx_projects').insert({
+        const { error } = await sbAdmin.from('cx_projects').insert({
           ...data,
           id: Date.now().toString(),
           sortOrder: projects.length,
@@ -191,7 +197,7 @@ export default function Home() {
   const deleteProject = async (id) => {
     if (!confirm('Delete?')) return;
     try {
-      await sb.from('cx_projects').delete().eq('id', id);
+      await sbAdmin.from('cx_projects').delete().eq('id', id);
       loadData();
     } catch (err) {
       alert('Error deleting');
@@ -218,10 +224,10 @@ export default function Home() {
       };
 
       if (editing.risk) {
-        const { error } = await sb.from('cx_risk_register').update(data).eq('id', editing.risk.id);
+        const { error } = await sbAdmin.from('cx_risk_register').update(data).eq('id', editing.risk.id);
         if (error) throw error;
       } else {
-        const { error } = await sb.from('cx_risk_register').insert({
+        const { error } = await sbAdmin.from('cx_risk_register').insert({
           ...data,
           id: Date.now().toString(),
           sortOrder: risks.length,
@@ -241,7 +247,7 @@ export default function Home() {
   const deleteRisk = async (id) => {
     if (!confirm('Delete?')) return;
     try {
-      await sb.from('cx_risk_register').delete().eq('id', id);
+      await sbAdmin.from('cx_risk_register').delete().eq('id', id);
       loadData();
     } catch (err) {
       alert('Error deleting');
@@ -267,22 +273,26 @@ export default function Home() {
       };
 
       if (editing.user) {
-        await sb.from('cx_standup_users').update(data).eq('username', editing.user.username);
+        const { error } = await sbAdmin.from('cx_standup_users').update(data).eq('username', editing.user.username);
+        if (error) throw error;
       } else {
-        await sb.from('cx_standup_users').insert(data);
+        const { error } = await sbAdmin.from('cx_standup_users').insert(data);
+        if (error) throw error;
       }
 
       closeModal('user');
-      loadData();
+      await loadData();
+      alert('✅ User saved successfully!');
     } catch (err) {
-      alert('Error saving user');
+      console.error('Save error:', err);
+      alert('❌ Error: ' + (err.message || 'Failed to save user'));
     }
   };
 
   const deleteUser = async (username) => {
     if (!confirm('Delete user?')) return;
     try {
-      await sb.from('cx_standup_users').delete().eq('username', username);
+      await sbAdmin.from('cx_standup_users').delete().eq('username', username);
       loadData();
     } catch (err) {
       alert('Error deleting user');
@@ -319,7 +329,7 @@ export default function Home() {
     e.preventDefault();
     if (dragSource !== 'items') return;
     try {
-      await sb.from('cx_standup_items').update({ status }).eq('id', draggedId);
+      await sbAdmin.from('cx_standup_items').update({ status }).eq('id', draggedId);
       loadData();
     } catch (err) {
       console.error(err);
@@ -331,7 +341,7 @@ export default function Home() {
     e.preventDefault();
     if (dragSource !== 'projects') return;
     try {
-      await sb.from('cx_projects').update({ lane }).eq('id', draggedId);
+      await sbAdmin.from('cx_projects').update({ lane }).eq('id', draggedId);
       loadData();
     } catch (err) {
       console.error(err);
@@ -343,7 +353,7 @@ export default function Home() {
     e.preventDefault();
     if (dragSource !== 'risks') return;
     try {
-      await sb.from('cx_risk_register').update({ status }).eq('id', draggedId);
+      await sbAdmin.from('cx_risk_register').update({ status }).eq('id', draggedId);
       loadData();
     } catch (err) {
       console.error(err);
