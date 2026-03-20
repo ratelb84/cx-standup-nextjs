@@ -41,3 +41,4 @@ All users from the original cx-standup app:
 - etc.
 
 All stored in Supabase `cx_standup_users` table.
+# Deployment fix
