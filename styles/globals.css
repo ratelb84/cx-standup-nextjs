@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-100;
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
+.sidebar {
+  @apply bg-gray-900;
+}
+
+.nav-item {
+  @apply text-gray-400 transition-all text-xs p-2 rounded-md flex items-center gap-2 cursor-pointer my-px mx-2;
+}
+
+.nav-item:hover {
+  @apply text-white bg-indigo-900/15;
+}
+
+.nav-item.active {
+  @apply text-indigo-400 bg-indigo-900/12;
+}
+
+.nav-section {
+  @apply text-gray-500 text-[10px] font-bold uppercase tracking-wider py-3 px-4 mt-1;
+}
+
+.card {
+  @apply bg-white border border-gray-200 rounded-xl;
+}
+
+.stat-card {
+  @apply bg-white border border-gray-200 rounded-lg p-4;
+}
+
+.badge {
+  @apply inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full;
+}
+
+.badge-green {
+  @apply bg-green-50 text-green-600;
+}
+
+.badge-amber {
+  @apply bg-amber-50 text-amber-600;
+}
+
+.badge-red {
+  @apply bg-red-50 text-red-600;
+}
+
+.badge-blue {
+  @apply bg-blue-50 text-blue-600;
+}
+
+.badge-gray {
+  @apply bg-gray-100 text-gray-600;
+}
+
+.badge-purple {
+  @apply bg-purple-50 text-purple-700;
+}
+
+.btn {
+  @apply text-xs font-medium px-4 py-2 rounded-lg cursor-pointer transition-all inline-flex items-center gap-1.5 border-none;
+}
+
+.btn-accent {
+  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+.btn-danger {
+  @apply text-red-600 bg-transparent p-1 text-xs cursor-pointer hover:bg-red-50 rounded;
+}
+
+.input-field {
+  @apply bg-white border border-gray-300 rounded-lg p-1.75 text-sm text-gray-900 outline-none font-poppins;
+}
+
+.input-field:focus {
+  @apply border-indigo-600 ring-3 ring-indigo-100;
+}
+
+.lane {
+  @apply bg-gray-100 rounded-xl min-h-96 flex flex-col;
+}
+
+.lane-header {
+  @apply p-4 rounded-t-xl;
+}
+
+.lane-high .lane-header {
+  @apply bg-gradient-to-br from-red-50 to-red-100 border-b-2 border-red-400;
+}
+
+.lane-medium .lane-header {
+  @apply bg-gradient-to-br from-amber-50 to-amber-100 border-b-2 border-amber-300;
+}
+
+.lane-low .lane-header {
+  @apply bg-gradient-to-br from-blue-50 to-blue-100 border-b-2 border-blue-300;
+}
+
+.lane-body {
+  @apply p-3 flex-1;
+}
+
+.drag-card {
+  @apply bg-white border border-gray-200 rounded-lg p-3.5 mb-2.5 cursor-grab transition-all;
+}
+
+.drag-card:hover {
+  @apply shadow-md border-gray-300;
+}
+
+.drag-card.dragging {
+  @apply opacity-40;
+}
