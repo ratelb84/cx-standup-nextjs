@@ -3,9 +3,12 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  font-family: 'Poppins', system-ui, sans-serif;
+}
+
 body {
   @apply bg-gray-100;
-  font-family: 'Poppins', system-ui, sans-serif;
 }
 
 .sidebar {
@@ -13,19 +16,21 @@ body {
 }
 
 .nav-item {
-  @apply text-gray-400 transition-all text-xs p-2 rounded-md flex items-center gap-2 cursor-pointer my-px mx-2;
+  @apply text-gray-400 transition-all text-xs p-2 rounded-md flex items-center gap-2 cursor-pointer my-1 mx-2;
 }
 
 .nav-item:hover {
-  @apply text-white bg-indigo-900/15;
+  @apply text-white;
+  background: rgba(99, 102, 241, 0.15);
 }
 
 .nav-item.active {
-  @apply text-indigo-400 bg-indigo-900/12;
+  @apply text-indigo-400;
+  background: rgba(99, 102, 241, 0.12);
 }
 
 .nav-section {
-  @apply text-gray-500 text-[10px] font-bold uppercase tracking-wider py-3 px-4 mt-1;
+  @apply text-gray-500 font-bold uppercase text-xs tracking-widest py-3 px-4 mt-1;
 }
 
 .card {
@@ -37,7 +42,7 @@ body {
 }
 
 .badge {
-  @apply inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full;
+  @apply inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full;
 }
 
 .badge-green {
@@ -73,43 +78,37 @@ body {
 }
 
 .btn-danger {
-  @apply text-red-600 bg-transparent p-1 text-xs cursor-pointer hover:bg-red-50 rounded;
+  @apply text-red-600 bg-transparent p-1 text-xs cursor-pointer rounded;
+}
+
+.btn-danger:hover {
+  @apply bg-red-50;
 }
 
 .input-field {
-  @apply bg-white border border-gray-300 rounded-lg p-1.75 text-sm text-gray-900 outline-none font-poppins;
+  @apply bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 outline-none;
 }
 
 .input-field:focus {
-  @apply border-indigo-600 ring-3 ring-indigo-100;
+  @apply border-indigo-600;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .lane {
-  @apply bg-gray-100 rounded-xl min-h-96 flex flex-col;
+  @apply bg-gray-100 rounded-xl flex flex-col;
+  min-height: 400px;
 }
 
 .lane-header {
-  @apply p-4 rounded-t-xl;
-}
-
-.lane-high .lane-header {
-  @apply bg-gradient-to-br from-red-50 to-red-100 border-b-2 border-red-400;
-}
-
-.lane-medium .lane-header {
-  @apply bg-gradient-to-br from-amber-50 to-amber-100 border-b-2 border-amber-300;
-}
-
-.lane-low .lane-header {
-  @apply bg-gradient-to-br from-blue-50 to-blue-100 border-b-2 border-blue-300;
+  @apply p-4 rounded-t-xl font-semibold;
 }
 
 .lane-body {
-  @apply p-3 flex-1;
+  @apply p-3 flex-1 space-y-2;
 }
 
 .drag-card {
-  @apply bg-white border border-gray-200 rounded-lg p-3.5 mb-2.5 cursor-grab transition-all;
+  @apply bg-white border border-gray-200 rounded-lg p-3.5 cursor-grab transition-all;
 }
 
 .drag-card:hover {
@@ -118,4 +117,8 @@ body {
 
 .drag-card.dragging {
   @apply opacity-40;
+}
+
+.topbar {
+  @apply bg-white border-b border-gray-200;
 }
