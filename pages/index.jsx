@@ -66,6 +66,17 @@ export default function Home() {
         sbAdmin.from('cx_risk_register').select('*').order('sort_order'),
         sbAdmin.from('cx_standup_users').select('*').order('display_name'),
       ]);
+      
+      console.log('Items response:', itemsRes);
+      console.log('Projects response:', projectRes);
+      console.log('Risks response:', riskRes);
+      console.log('Users response:', usersRes);
+      
+      if (itemsRes.error) console.error('Items error:', itemsRes.error);
+      if (projectRes.error) console.error('Projects error:', projectRes.error);
+      if (riskRes.error) console.error('Risks error:', riskRes.error);
+      if (usersRes.error) console.error('Users error:', usersRes.error);
+      
       if (itemsRes.data) setItems(itemsRes.data);
       if (projectRes.data) setProjects(projectRes.data);
       if (riskRes.data) setRisks(riskRes.data);
