@@ -3,16 +3,13 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
-// Use anon key for reads, service role for writes (bypasses RLS)
+// Client-side Supabase for auth only (not data queries)
 const sb = createClient(
   'https://hqfszlxdkvwlvpwqqmbd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZnN6bHhka3Z3bHZwd3FxbWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTExODgsImV4cCI6MjA4ODEyNzE4OH0.4OlPny5uJFTslf6iWfF7fAaVl0x2I_VG63QPa1Amq8Q'
 );
 
-const sbAdmin = createClient(
-  'https://hqfszlxdkvwlvpwqqmbd.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxZnN6bHhka3Z3bHZwd3FxbWJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjU1MTE4OCwiZXhwIjoyMDg4MTI3MTg4fQ.EAOsrTO51SrDiyRz5DHp0uGYSpUSans-uNlqZcABPyk'
-);
+// Data is now fetched via /api/data (backend-only)
 
 const OWNERS = ['Don', 'Mark', 'Kerushan', 'Daryl', 'Tunya', 'Tim', 'John', 'Greg', 'Verona', 'Rich'];
 const OWNER_COLORS = {
@@ -60,27 +57,20 @@ export default function Home() {
 
   const loadData = async () => {
     try {
-      const [itemsRes, projectRes, riskRes, usersRes] = await Promise.all([
-        sbAdmin.from('cx_standup_items').select('*').order('sort_order'),
-        sbAdmin.from('cx_projects').select('*').order('sort_order'),
-        sbAdmin.from('cx_risk_register').select('*').order('sort_order'),
-        sbAdmin.from('cx_standup_users').select('*').order('display_name'),
-      ]);
+      const response = await fetch('/api/data');
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('API error:', error);
+        return;
+      }
       
-      console.log('Items response:', itemsRes);
-      console.log('Projects response:', projectRes);
-      console.log('Risks response:', riskRes);
-      console.log('Users response:', usersRes);
+      const { items, projects, risks, users } = await response.json();
+      console.log('✅ Data loaded:', { items: items.length, projects: projects.length, risks: risks.length, users: users.length });
       
-      if (itemsRes.error) console.error('Items error:', itemsRes.error);
-      if (projectRes.error) console.error('Projects error:', projectRes.error);
-      if (riskRes.error) console.error('Risks error:', riskRes.error);
-      if (usersRes.error) console.error('Users error:', usersRes.error);
-      
-      if (itemsRes.data) setItems(itemsRes.data);
-      if (projectRes.data) setProjects(projectRes.data);
-      if (riskRes.data) setRisks(riskRes.data);
-      if (usersRes.data) setUsers(usersRes.data);
+      setItems(items);
+      setProjects(projects);
+      setRisks(risks);
+      setUsers(users);
     } catch (err) {
       console.error('Load error:', err);
     }
