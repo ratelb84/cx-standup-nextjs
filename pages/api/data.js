@@ -12,10 +12,10 @@ export default async function handler(req, res) {
 
   try {
     const [itemsRes, projectRes, riskRes, usersRes] = await Promise.all([
-      sb.from('cx_standup_items').select('*').order('sort_order'),
-      sb.from('cx_projects').select('*').order('sort_order'),
-      sb.from('cx_risk_register').select('*').order('sort_order'),
-      sb.from('cx_standup_users').select('*').order('display_name'),
+      sb.from('cx_standup_items').select('*').order('sort_order', { ascending: true }),
+      sb.from('cx_projects').select('*').order('created_at', { ascending: false }),
+      sb.from('cx_risk_register').select('*').order('created_at', { ascending: false }),
+      sb.from('cx_standup_users').select('*').order('display_name', { ascending: true }),
     ]);
 
     if (itemsRes.error || projectRes.error || riskRes.error || usersRes.error) {
