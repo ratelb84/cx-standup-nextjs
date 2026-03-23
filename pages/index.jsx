@@ -905,20 +905,20 @@ function SummaryPage({ items }) {
 }
 
 function ProjectsPage({ projects, draggedId, onDragStart, onDragOver, onDrop, onEdit, onDelete }) {
-  const lanes = ['MVP', 'V1.1 Post Launch', 'V2 Future'];
+  const statuses = ['Active', 'Completed', 'On Hold'];
   return (
     <div className="grid grid-cols-3 gap-6">
-      {lanes.map((lane) => (
+      {statuses.map((status) => (
         <div
-          key={lane}
+          key={status}
           className="lane"
           onDragOver={onDragOver}
-          onDrop={(e) => onDrop(e, lane)}
+          onDrop={(e) => onDrop(e, status)}
         >
-          <div className="lane-header font-semibold text-gray-800 bg-gray-200">{lane}</div>
+          <div className="lane-header font-semibold text-gray-800 bg-gray-200">{status}</div>
           <div className="lane-body">
             {projects
-              .filter((p) => p.lane === lane)
+              .filter((p) => p.status === status)
               .map((project) => (
                 <div
                   key={project.id}
@@ -927,10 +927,11 @@ function ProjectsPage({ projects, draggedId, onDragStart, onDragOver, onDrop, on
                   onDragStart={(e) => onDragStart(e, project.id, 'projects')}
                 >
                   <div className="flex justify-between gap-2 mb-2">
-                    <h4 className="font-semibold text-sm text-gray-900">{project.title}</h4>
+                    <h4 className="font-semibold text-sm text-gray-900">{project.name}</h4>
                     <button onClick={() => onDelete(project.id)} className="btn-danger">✕</button>
                   </div>
                   <p className="text-xs text-gray-600">{project.description}</p>
+                  <p className="text-xs text-gray-500 mt-2">Owner: {project.owner}</p>
                 </div>
               ))}
           </div>
@@ -941,7 +942,7 @@ function ProjectsPage({ projects, draggedId, onDragStart, onDragOver, onDrop, on
 }
 
 function RisksPage({ risks, draggedId, onDragStart, onDragOver, onDrop, onEdit, onDelete }) {
-  const statuses = ['Open', 'In Progress', 'Mitigated'];
+  const statuses = ['Open', 'Closed'];
   return (
     <div className="grid grid-cols-3 gap-6">
       {statuses.map((status) => (
