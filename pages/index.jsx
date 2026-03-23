@@ -496,7 +496,7 @@ export default function Home() {
 
         <div className="flex-1 overflow-auto p-8">
           {currentPage === 'dashboard' && <DashboardPage items={items} risks={risks} />}
-          {currentPage === 'feedback' && <FeedbackPage />}
+          {currentPage === 'feedback' && <FeedbackPage currentUser={currentUser} />}
           {currentPage === 'board' && (
             <BoardPage
               items={items}
@@ -802,10 +802,163 @@ function DashboardPage({ items, risks }) {
   );
 }
 
-function FeedbackPage() {
+function FeedbackPage({ currentUser }) {
+  const [feedback, setFeedback] = React.useState({
+    performance: '',
+    red_flags: '',
+    project_updates: '',
+    key_focus: '',
+    escalations: '',
+  });
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitted, setSubmitted] = React.useState(false);
+
+  // Get current week start (Monday)
+  const getWeekStart = () => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(today.setDate(diff));
+    return monday.toISOString().split('T')[0];
+  };
+
+  const weekStart = getWeekStart();
+
+  React.useEffect(() => {
+    // Load existing feedback for this week
+    const loadFeedback = async () => {
+      try {
+        const res = await fetch(`/api/feedback?owner=${currentUser.display_name}&week_start=${weekStart}`);
+        const data = await res.json();
+        if (data.length > 0) {
+          setFeedback({
+            performance: data[0].performance || '',
+            red_flags: data[0].red_flags || '',
+            project_updates: data[0].project_updates || '',
+            key_focus: data[0].key_focus || '',
+            escalations: data[0].escalations || '',
+          });
+          setSubmitted(data[0].status === 'Submitted');
+        }
+      } catch (err) {
+        console.error('Error loading feedback:', err);
+      }
+    };
+    loadFeedback();
+  }, [currentUser, weekStart]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          owner: currentUser.display_name,
+          week_start: weekStart,
+          ...feedback,
+        }),
+      });
+      if (res.ok) {
+        setSubmitted(true);
+        alert('✅ Your weekly submission has been submitted!');
+      } else {
+        alert('Error submitting feedback');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
-    <div className="card p-8 text-center text-gray-600">
-      <p>Weekly feedback form coming soon</p>
+    <div className="max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">📝 Weekly Standup Submission</h1>
+        <p className="text-sm text-gray-500 mt-1">Week starting {weekStart}</p>
+        {submitted && (
+          <div className="mt-2 p-3 bg-green-100 text-green-700 rounded text-sm">
+            ✅ Your submission has been recorded
+          </div>
+        )}
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Performance vs Target */}
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">📊 Performance vs Target (Key Metrics Only)</h2>
+          <p className="text-xs text-gray-500 mb-3">Share your key metrics - only the critical numbers for this week</p>
+          <textarea
+            value={feedback.performance}
+            onChange={(e) => setFeedback({ ...feedback, performance: e.target.value })}
+            placeholder="e.g., Sales: 150% of target, Quality Score: 92%, Utilization: 85%"
+            className="input-field w-full"
+            rows="4"
+          />
+        </div>
+
+        {/* Red Flags / Issues */}
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">🚩 Red Flags / Issues</h2>
+          <p className="text-xs text-gray-500 mb-3">What do we need to be aware of? Problems, blockers, risks?</p>
+          <textarea
+            value={feedback.red_flags}
+            onChange={(e) => setFeedback({ ...feedback, red_flags: e.target.value })}
+            placeholder="e.g., Key person out sick, vendor delay, system outage..."
+            className="input-field w-full"
+            rows="4"
+          />
+        </div>
+
+        {/* Key Project Updates */}
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">🚀 Key Project Updates</h2>
+          <p className="text-xs text-gray-500 mb-3">Status of key initiatives underway</p>
+          <textarea
+            value={feedback.project_updates}
+            onChange={(e) => setFeedback({ ...feedback, project_updates: e.target.value })}
+            placeholder="e.g., Project X: 75% complete, on track for March delivery..."
+            className="input-field w-full"
+            rows="4"
+          />
+        </div>
+
+        {/* Key Focus Item */}
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">🎯 Key Focus Item (This Week)</h2>
+          <p className="text-xs text-gray-500 mb-3">What is your #1 priority this week?</p>
+          <textarea
+            value={feedback.key_focus}
+            onChange={(e) => setFeedback({ ...feedback, key_focus: e.target.value })}
+            placeholder="e.g., Complete recruitment for 5 open positions..."
+            className="input-field w-full"
+            rows="4"
+          />
+        </div>
+
+        {/* Escalations */}
+        <div className="card p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">⬆️ Escalations</h2>
+          <p className="text-xs text-gray-500 mb-3">What decisions or input do you need from leadership?</p>
+          <textarea
+            value={feedback.escalations}
+            onChange={(e) => setFeedback({ ...feedback, escalations: e.target.value })}
+            placeholder="e.g., Approval needed for budget increase, strategic decision required..."
+            className="input-field w-full"
+            rows="4"
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={submitting}
+          className="btn btn-accent w-full"
+        >
+          {submitting ? '📤 Submitting...' : '✅ Submit My Standup Prep'}
+        </button>
+      </form>
     </div>
   );
 }
