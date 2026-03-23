@@ -812,6 +812,20 @@ function FeedbackPage() {
 
 function BoardPage({ items, draggedId, onDragStart, onDragOver, onDrop, onEdit, onDelete, onStatusChange }) {
   const statuses = ['Open', 'In Progress', 'Blocked', 'Done'];
+  
+  const isOverdue = (dueDate) => {
+    if (!dueDate) return false;
+    return new Date(dueDate) < new Date() && new Date(dueDate).toDateString() !== new Date().toDateString();
+  };
+  
+  const getDaysUntilDue = (dueDate) => {
+    if (!dueDate) return null;
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diff = Math.ceil((due - today) / (1000 * 60 * 60 * 24));
+    return diff;
+  };
+  
   return (
     <div className="grid grid-cols-4 gap-6">
       {statuses.map((status) => (
@@ -825,40 +839,56 @@ function BoardPage({ items, draggedId, onDragStart, onDragOver, onDrop, onEdit, 
           <div className="lane-body">
             {items
               .filter((i) => i.status === status)
-              .map((item) => (
-                <div
-                  key={item.id}
-                  className="drag-card"
-                  draggable
-                  onDragStart={(e) => onDragStart(e, item.id, 'items')}
-                >
-                  <div className="flex justify-between items-start gap-2 mb-2">
-                    <div className="font-semibold text-sm text-gray-900">{item.item}</div>
-                    <button
-                      onClick={() => onDelete(item.id)}
-                      className="btn-danger"
-                    >
-                      ✕
-                    </button>
+              .map((item) => {
+                const overdue = isOverdue(item.due_date);
+                const daysLeft = getDaysUntilDue(item.due_date);
+                return (
+                  <div
+                    key={item.id}
+                    className={`drag-card ${overdue ? 'border-l-4 border-red-500 bg-red-50' : ''}`}
+                    draggable
+                    onDragStart={(e) => onDragStart(e, item.id, 'items')}
+                    style={overdue ? { borderLeft: '4px solid #ef4444' } : {}}
+                  >
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-1">
+                          <div className="font-semibold text-sm text-gray-900">{item.item}</div>
+                          {overdue && <span title="Overdue">🔴</span>}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => onDelete(item.id)}
+                        className="btn-danger"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2">{item.action}</p>
+                    <div className="flex gap-1 flex-wrap text-xs mb-2">
+                      <span className="badge badge-gray">{item.priority}</span>
+                      {item.due_date && (
+                        <span 
+                          className={`badge ${overdue ? 'bg-red-100 text-red-700' : daysLeft <= 3 ? 'bg-yellow-100 text-yellow-700' : 'badge-blue'}`}
+                        >
+                          {overdue ? '⚠️ ' : daysLeft <= 3 ? '⏰ ' : ''}{item.due_date} {daysLeft !== null && `(${daysLeft}d)`}
+                        </span>
+                      )}
+                    </div>
+                    {onStatusChange && (
+                      <select
+                        value={item.status}
+                        onChange={(e) => onStatusChange(item.id, e.target.value)}
+                        className="input-field w-full text-xs"
+                      >
+                        {statuses.map((s) => (
+                          <option key={s} value={s}>{s}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-600 mb-2">{item.action}</p>
-                  <div className="flex gap-1 flex-wrap text-xs mb-2">
-                    <span className="badge badge-gray">{item.priority}</span>
-                    {item.due_date && <span className="badge badge-blue">{item.due_date}</span>}
-                  </div>
-                  {onStatusChange && (
-                    <select
-                      value={item.status}
-                      onChange={(e) => onStatusChange(item.id, e.target.value)}
-                      className="input-field w-full text-xs"
-                    >
-                      {statuses.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-              ))}
+                );
+              })}
           </div>
         </div>
       ))}
