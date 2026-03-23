@@ -148,12 +148,33 @@ export default function Home() {
   };
 
   const deleteItem = async (id) => {
-    if (!confirm('Delete?')) return;
+    if (!confirm('Delete this item?')) return;
     try {
-      await sbAdmin.from('cx_standup_items').delete().eq('id', id);
-      loadData();
+      const res = await fetch(`/api/items?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        loadData();
+      } else {
+        alert('Error deleting item');
+      }
     } catch (err) {
-      alert('Error deleting');
+      alert('Error: ' + err.message);
+    }
+  };
+
+  const updateItemStatus = async (id, newStatus) => {
+    try {
+      const res = await fetch(`/api/items?id=${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        loadData();
+      } else {
+        alert('Error updating status');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
     }
   };
 
@@ -485,6 +506,7 @@ export default function Home() {
               onDrop={handleDropStatus}
               onEdit={(item) => openModal('item', item)}
               onDelete={deleteItem}
+              onStatusChange={updateItemStatus}
             />
           )}
           {currentPage === 'list' && (
@@ -788,7 +810,7 @@ function FeedbackPage() {
   );
 }
 
-function BoardPage({ items, draggedId, onDragStart, onDragOver, onDrop, onEdit, onDelete }) {
+function BoardPage({ items, draggedId, onDragStart, onDragOver, onDrop, onEdit, onDelete, onStatusChange }) {
   const statuses = ['Open', 'In Progress', 'Blocked', 'Done'];
   return (
     <div className="grid grid-cols-4 gap-6">
@@ -820,10 +842,21 @@ function BoardPage({ items, draggedId, onDragStart, onDragOver, onDrop, onEdit, 
                     </button>
                   </div>
                   <p className="text-xs text-gray-600 mb-2">{item.action}</p>
-                  <div className="flex gap-1 flex-wrap text-xs">
+                  <div className="flex gap-1 flex-wrap text-xs mb-2">
                     <span className="badge badge-gray">{item.priority}</span>
-                    {item.dueDate && <span className="badge badge-blue">{item.dueDate}</span>}
+                    {item.due_date && <span className="badge badge-blue">{item.due_date}</span>}
                   </div>
+                  {onStatusChange && (
+                    <select
+                      value={item.status}
+                      onChange={(e) => onStatusChange(item.id, e.target.value)}
+                      className="input-field w-full text-xs"
+                    >
+                      {statuses.map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               ))}
           </div>
