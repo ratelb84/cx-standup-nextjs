@@ -431,6 +431,7 @@ export default function Home() {
 
           <div className="nav-section mt-6">📋 Weekly Feedback</div>
           <div onClick={() => setCurrentPage('feedback')} className={`nav-item ${currentPage === 'feedback' ? 'active' : ''}`}>Weekly Submission</div>
+          <div onClick={() => setCurrentPage('feedback-review')} className={`nav-item ${currentPage === 'feedback-review' ? 'active' : ''}`}>Review History</div>
 
           <div className="nav-section mt-6">⚡ Action Items</div>
           <div onClick={() => setCurrentPage('board')} className={`nav-item ${currentPage === 'board' ? 'active' : ''}`}>Priority Board</div>
@@ -462,7 +463,8 @@ export default function Home() {
         <div className="topbar flex items-center justify-between px-8 py-4 sticky top-0 z-10 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">
             {currentPage === 'dashboard' && '📊 Dashboard'}
-            {currentPage === 'feedback' && '📝 Weekly Feedback'}
+            {currentPage === 'feedback' && '📝 Weekly Submission'}
+            {currentPage === 'feedback-review' && '📋 Weekly History Review'}
             {currentPage === 'board' && '📌 Priority Board'}
             {currentPage === 'list' && '📄 List View'}
             {currentPage === 'people' && '👥 By Person'}
@@ -497,6 +499,7 @@ export default function Home() {
         <div className="flex-1 overflow-auto p-8">
           {currentPage === 'dashboard' && <DashboardPage items={items} risks={risks} />}
           {currentPage === 'feedback' && <FeedbackPage currentUser={currentUser} />}
+          {currentPage === 'feedback-review' && <FeedbackReviewPage currentUser={currentUser} />}
           {currentPage === 'board' && (
             <BoardPage
               items={items}
@@ -959,6 +962,218 @@ function FeedbackPage({ currentUser }) {
           {submitting ? '📤 Submitting...' : '✅ Submit My Standup Prep'}
         </button>
       </form>
+    </div>
+  );
+}
+
+function FeedbackReviewPage({ currentUser }) {
+  const [allFeedback, setAllFeedback] = React.useState([]);
+  const [selectedWeek, setSelectedWeek] = React.useState(null);
+  const [editingId, setEditingId] = React.useState(null);
+  const [outcomes, setOutcomes] = React.useState('');
+  const [reasons, setReasons] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const loadFeedback = async () => {
+      try {
+        const res = await fetch('/api/feedback-history');
+        const data = await res.json();
+        setAllFeedback(data);
+        if (data.length > 0) {
+          setSelectedWeek(data[0].week_start);
+        }
+      } catch (err) {
+        console.error('Error loading feedback history:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadFeedback();
+  }, []);
+
+  const saveOutcomes = async (feedbackId) => {
+    try {
+      const res = await fetch('/api/feedback-history', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: feedbackId, outcomes, reasons }),
+      });
+      if (res.ok) {
+        setEditingId(null);
+        // Reload
+        const res2 = await fetch('/api/feedback-history');
+        const data = await res2.json();
+        setAllFeedback(data);
+        alert('✅ Outcomes updated');
+      } else {
+        alert('Error saving outcomes');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  };
+
+  const weeks = [...new Set(allFeedback.map(f => f.week_start))].sort().reverse();
+  const weekData = allFeedback.filter(f => f.week_start === selectedWeek);
+
+  if (loading) {
+    return <div className="text-center py-8">Loading...</div>;
+  }
+
+  return (
+    <div className="max-w-6xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">📋 Weekly History Review</h1>
+        <p className="text-sm text-gray-500 mt-1">Review what was planned vs what was done</p>
+      </div>
+
+      {/* Week Selector */}
+      {weeks.length > 0 && (
+        <div className="mb-6 flex gap-2 flex-wrap">
+          {weeks.map((week) => (
+            <button
+              key={week}
+              onClick={() => setSelectedWeek(week)}
+              className={`px-4 py-2 rounded text-sm font-medium ${
+                selectedWeek === week
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
+            >
+              {week}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Team Feedback Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {weekData.map((feedback) => (
+          <div key={feedback.id} className="card p-6 border border-gray-200">
+            {/* Person + Status */}
+            <div className="flex items-center justify-between mb-4 pb-4 border-b">
+              <h3 className="text-lg font-bold text-gray-900">{feedback.owner}</h3>
+              <span className={`px-3 py-1 rounded text-xs font-medium ${
+                feedback.status === 'Submitted' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+              }`}>
+                {feedback.status || 'Draft'}
+              </span>
+            </div>
+
+            {/* Original Submission */}
+            <div className="space-y-4 mb-6 pb-6 border-b">
+              {feedback.performance && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">📊 Performance</h4>
+                  <p className="text-sm text-gray-700">{feedback.performance}</p>
+                </div>
+              )}
+              {feedback.red_flags && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">🚩 Red Flags</h4>
+                  <p className="text-sm text-gray-700">{feedback.red_flags}</p>
+                </div>
+              )}
+              {feedback.project_updates && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">🚀 Projects</h4>
+                  <p className="text-sm text-gray-700">{feedback.project_updates}</p>
+                </div>
+              )}
+              {feedback.key_focus && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">🎯 Key Focus</h4>
+                  <p className="text-sm text-gray-700">{feedback.key_focus}</p>
+                </div>
+              )}
+              {feedback.escalations && (
+                <div>
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1">⬆️ Escalations</h4>
+                  <p className="text-sm text-gray-700">{feedback.escalations}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Outcomes Review */}
+            {editingId === feedback.id ? (
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase">What was actually done?</label>
+                  <textarea
+                    value={outcomes}
+                    onChange={(e) => setOutcomes(e.target.value)}
+                    placeholder="Describe outcomes, what was completed..."
+                    className="input-field w-full mt-1"
+                    rows="3"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase">Reasons for changes/delays</label>
+                  <textarea
+                    value={reasons}
+                    onChange={(e) => setReasons(e.target.value)}
+                    placeholder="Why didn't we do what was planned? What changed?"
+                    className="input-field w-full mt-1"
+                    rows="3"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => saveOutcomes(feedback.id)}
+                    className="btn btn-accent text-sm flex-1"
+                  >
+                    Save Outcomes
+                  </button>
+                  <button
+                    onClick={() => setEditingId(null)}
+                    className="btn text-sm flex-1"
+                    style={{ background: '#f3f4f6', color: '#374151' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {feedback.outcomes ? (
+                  <div className="space-y-3">
+                    <div>
+                      <h4 className="text-xs font-semibold text-green-600 uppercase mb-1">✅ What was done</h4>
+                      <p className="text-sm text-gray-700">{feedback.outcomes}</p>
+                    </div>
+                    {feedback.reasons && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-amber-600 uppercase mb-1">⚡ Reasons</h4>
+                        <p className="text-sm text-gray-700">{feedback.reasons}</p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">No outcomes recorded yet</p>
+                )}
+                <button
+                  onClick={() => {
+                    setEditingId(feedback.id);
+                    setOutcomes(feedback.outcomes || '');
+                    setReasons(feedback.reasons || '');
+                  }}
+                  className="btn text-sm mt-3 w-full"
+                  style={{ background: '#f3f4f6', color: '#374151' }}
+                >
+                  {feedback.outcomes ? 'Edit Outcomes' : 'Add Outcomes'}
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {weekData.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No submissions for this week
+        </div>
+      )}
     </div>
   );
 }
