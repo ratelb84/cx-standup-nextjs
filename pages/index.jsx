@@ -61,10 +61,10 @@ export default function Home() {
   const loadData = async () => {
     try {
       const [itemsRes, projectRes, riskRes, usersRes] = await Promise.all([
-        sb.from('cx_standup_items').select('*').order('sortOrder'),
-        sb.from('cx_projects').select('*').order('sortOrder'),
-        sb.from('cx_risk_register').select('*').order('sortOrder'),
-        sb.from('cx_standup_users').select('*').order('display_name'),
+        sbAdmin.from('cx_standup_items').select('*').order('sort_order'),
+        sbAdmin.from('cx_projects').select('*').order('sort_order'),
+        sbAdmin.from('cx_risk_register').select('*').order('sort_order'),
+        sbAdmin.from('cx_standup_users').select('*').order('display_name'),
       ]);
       if (itemsRes.data) setItems(itemsRes.data);
       if (projectRes.data) setProjects(projectRes.data);
